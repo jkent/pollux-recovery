@@ -1,0 +1,25 @@
+#ifndef __CONFIG_H
+#define __CONFIG_H
+
+#define CONFIG_START_FROM_RAM
+//#define CONFIG_START_FROM_NAND
+//#define CONFIG_START_FROM_NOR
+//#define CONFIG_START_FROM_UART
+
+#define CONFIG_SHADOW
+#if defined(CONFIG_START_FROM_NOR)
+# undef CONFIG_SHADOW
+#endif
+
+#if defined(CONFIG_SHADOW)
+# define CONFIG_RAM_BASE	0x00000000
+#else
+# define CONFIG_RAM_BASE	0x80000000
+#endif
+
+#define CONFIG_BOOT_OFFSET	0x780000
+#define CONFIG_STACK_SIZE	0x40000
+
+#define CONFIG_UART_STDIO
+
+#endif /* __CONFIG_H */

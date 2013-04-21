@@ -1,0 +1,58 @@
+/*
+ * Copyright (C) 2013 Jeff Kent <jeff@jkent.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include "config.h"
+
+OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
+OUTPUT_ARCH(arm)
+ENTRY(_entry)
+
+SECTIONS
+{
+  . = CONFIG_RAM_BASE;
+  _early_start = .;
+  .text.early : {
+    obj/init.o(.text)
+    obj/startup.o(.text)
+  }
+  .rodata.early : {
+    obj/init.o(.rodata)
+    obj/startup.o(.rodata)
+  }
+  . = ALIGN(32);
+  _early_end = .;
+
+  . = CONFIG_RAM_BASE + CONFIG_BOOT_OFFSET;
+  _reloc_start = .;
+  .text : AT(_early_end) { *(.text) }
+  .rodata : { *(.rodata) }
+  .data : { *(.data) }
+  . = ALIGN(32);
+  _reloc_end = .;
+
+  _bss_start = .;
+  .bss : { *(.bss) }
+  _bss_end = .;
+
+  . = ALIGN(4);
+  _stack_end = .;
+  . += CONFIG_STACK_SIZE;
+  _stack_top = .;
+
+  /* mthumb-interwork things */
+  /DISCARD/ : { *(.glue_7 .glue_7t .vfp11_veneer .v4_bx) }
+}
