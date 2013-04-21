@@ -18,9 +18,16 @@
 #include <stdio.h>
 
 #include "uart.h"
+#include "udc.h"
+#include "udc_driver.h"
 
 int main(void)
 {
 	uart_init();
-	printf("hello %s!", "world");
+	udc_init(&udc_driver);
+	puts("ready");
+
+	while(1) {
+		udc_task();
+	}
 }

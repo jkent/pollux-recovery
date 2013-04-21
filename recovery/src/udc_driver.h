@@ -15,18 +15,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <string.h>
+#ifndef _UDC_DRIVER_H
+#define _UDC_DRIVER_H
 
-unsigned int strlen(const char *s)
-{
-	unsigned int len = 0;
-	while (s[len++]);
-	return len;
-}
+extern struct udc_driver udc_driver;
 
-void bzero(void *s, size_t n)
-{
-	char *p = s;
-	while(n--)
-		*p++ = 0;
-}
+#endif /* _UDC_DRIVER_H */
+

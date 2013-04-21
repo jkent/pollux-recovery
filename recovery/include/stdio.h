@@ -38,8 +38,10 @@
 int printf (const char *, ...);
 
 #ifdef CONFIG_UART_STDIO
+# undef puts
 # undef fputc
 # undef fputs
+# define puts(s) uart_puts(s)
 # define fputc(c, stream) uart_putchar((char)c)
 # define fputs(s, stream) uart_write(s)
 #endif
