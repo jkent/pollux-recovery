@@ -29,10 +29,9 @@ SIZE    = $(CROSS_COMPILE)size
  
 CFLAGS  = -std=gnu99 -Wall -fms-extensions \
           -mcpu=arm926ej-s -mlittle-endian -msoft-float \
-          -ffast-math -mno-thumb-interwork -nostdlib \
-	  -ffunction-sections -fdata-sections
+          -ffast-math -mno-thumb-interwork -nostdlib
 ASFLAGS = -Wa,
-LDFLAGS = -Wl,--gc-sections
+LDFLAGS =
 LIBS = -lgcc
 INCLUDE = -I$(BAREMETAL)/include -I./include -I./src
 
