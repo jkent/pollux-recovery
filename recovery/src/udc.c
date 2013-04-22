@@ -436,21 +436,7 @@ static int udc_enable_ep(struct udc_ep *ep,
 	u16 eier;
 	u16 edr;
 
-	if (!ep || !desc || ep_index(ep) == 0
-			|| desc->bDescriptorType != USB_DT_ENDPOINT
-			|| ep->address != desc->bEndpointAddress
-			|| ep->maxpacket < desc->wMaxPacketSize)
-		return -EINVAL;
-
-	if ((usb_endpoint_xfer_bulk(desc)
-			&& ep->maxpacket != desc->wMaxPacketSize)
-			|| !desc->wMaxPacketSize)
-		return -ERANGE;
-
 	udc = ep->dev;
-	if (!udc->driver || udc->speed == USB_SPEED_UNKNOWN)
-		return -ESHUTDOWN;
-
 	set_index(udc, ep->address);
 	edr = readw(udc->regs + UDC_EDR);
 	if (ep_is_in(ep)) {
@@ -503,13 +489,7 @@ static int udc_queue(struct udc_ep *ep, struct udc_req *req)
 	u32 offset;
 	u16 esr;
 
-	if (!ep || !req || !req->buf ||	!list_empty(&req->queue))
-		return -EINVAL;
-
 	udc = ep->dev;
-	if (!udc->driver || udc->speed == USB_SPEED_UNKNOWN)
-		return -ESHUTDOWN;
-
 	set_index(udc, ep->address);
 
 	req->status = -EINPROGRESS;
@@ -567,7 +547,6 @@ static struct udc_ep_ops udc_ep_ops = {
 	.disable = udc_disable_ep,
 	.queue = udc_queue,
 	.set_halt = udc_set_halt,
-	.fifo_flush = udc_fifo_flush,
 };
 
 static void udc_init_ep(struct udc *udc, u8 epnum)
@@ -632,15 +611,11 @@ void udc_task(void)
 		if (sys_status & UDC_SSR_VBUSON) {
 			writew(UDC_SSR_VBUSON, udc->regs + UDC_SSR);
 			udc->state = USB_STATE_ATTACHED;
-			if (udc->driver && udc->driver->vbuson)
-				udc->driver->vbuson(udc);
 		}
 
 		if (sys_status & UDC_SSR_VBUSOFF) {
 			writew(UDC_SSR_VBUSON, udc->regs + UDC_SSR);
 			udc->state = USB_STATE_NOTATTACHED;
-			if (udc->driver && udc->driver->vbusoff)
-				udc->driver->vbusoff(udc);
 		}			
 
 		if (sys_status & UDC_SSR_ERR)
