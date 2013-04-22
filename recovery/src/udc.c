@@ -359,7 +359,8 @@ unhandled:
 	if (ctrl->bRequestType == (USB_TYPE_STANDARD | USB_RECIP_DEVICE) &&
 			ctrl->bRequest == USB_REQ_SET_CONFIGURATION) {
 		udc_nuke_ep(ep0, -ECONNRESET);
-		udc->state = (udc->config) ? USB_STATE_CONFIGURED : USB_STATE_ADDRESS;
+		udc->state = (udc->config) ? USB_STATE_CONFIGURED :
+				USB_STATE_ADDRESS;
 	}
 
 handled:
