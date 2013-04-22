@@ -522,26 +522,6 @@ static int udc_queue(struct udc_ep *ep, struct udc_req *req)
 	return 0;
 }
 
-void udc_fifo_flush(struct udc_ep *ep)
-{
-	struct udc *udc = ep->dev;
-	u16 ecr;
-	u8 count;
-
-	set_index(udc, ep->address);
-	if (ep_is_in(ep)) {
-		ecr = readw(udc->regs + UDC_ECR);
-		ecr |= UDC_ECR_FLUSH;
-		writew(ecr, udc->regs + UDC_ECR);
-	} else {
-		while ((readw(udc->regs + UDC_ESR) >> 2) & 3) {
-			count = readw(udc->regs + UDC_BRCR);
-			while (count--)
-				readw(ep->fifo);
-		}
-	}
-}
-
 static struct udc_ep_ops udc_ep_ops = {
 	.enable = udc_enable_ep,
 	.disable = udc_disable_ep,
