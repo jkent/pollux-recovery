@@ -166,9 +166,10 @@ static int udc_read_fifo(struct udc_ep *ep, struct udc_req *req)
 		is_last |= (esr & (1 << 15)) || (esr & (1 << 12));
 	}
 
-	if (is_last || req->actual == req->length)
-		udc_complete_req(ep, req, 0);
+	is_last |= (req->actual == req->length);
 
+	if (is_last)
+		udc_complete_req(ep, req, 0);
 
 	return is_last;
 }
@@ -457,7 +458,7 @@ static int udc_enable_ep(struct udc_ep *ep,
 	udc_set_halt(ep, 0);
 
 	eier = readw(udc->regs + UDC_EIER);
-	eier |= ep_index(ep);
+	eier |= 1 << ep_index(ep);
 	writew(eier, udc->regs + UDC_EIER);
 
 	return 0;
