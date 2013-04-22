@@ -21,8 +21,6 @@
 .arm
 .align 0
 
-.extern _early_end
-
 .global _entry
 .org _entry
 
@@ -51,14 +49,11 @@ _start:
 	ldr	r1, =_reloc_start
 	ldr	r2, =_reloc_end
 1:
-	ldmia	r0!, {r4-r11}
-	stmia	r1!, {r4-r11}
+	ldmia   r0!, {r10-r11}
+	stmia   r1!, {r10-r11}
 	cmp	r1, r2
-	bne	1b
+	blo	1b
 #endif
-	/* invalidate ICache */
-	mov	r0, #0
-	mcr	p15, 0, r0, c7, c5, 0
 
 	/* clear .bss */
 	ldr     r0, =_bss_start
@@ -68,10 +63,21 @@ _start:
 	strlo   r2, [r0], #4
 	blo     1b
 
+	ldr	r0, =main_tlb
+	ldr	r4, =init_tlb
+	blx	r4
+	ldr	r0, =main_tlb
+	ldr	r4, =_assign_tlb
+	blx	r4
+	ldr	r4, =_enable_cache
+	blx	r4
+
 	/* jump to main */
-	ldr	r0, =main
-	blx	r0
-	ldr	r0, =halt
-	blx	r0
+	ldr	r4, =main
+	blx	r4
+	ldr	r4, =halt
+	blx	r4
+
+.ltorg
 
 .end

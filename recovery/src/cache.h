@@ -15,20 +15,25 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdio.h>
+#ifndef _CACHE_H
+#define _CACHE_H
 
-#include "uart.h"
-#include "udc.h"
-#include "udc_driver.h"
-#include "cache.h"
+#if defined(__thumb__)
+	extern void _thumb_enable_cache(void);
+	extern void _thumb_disable_cache(void);
+	extern void _thumb_assign_tlb(void *);
+	#define enable_cache() _thumb_enable_cache()
+	#define disable_cache() _thumb_disable_cache()
+	#define assign_tlb(p) _thumb_assign_tlb(p)
+#else
+	extern void _enable_cache(void);
+	extern void _disable_cache(void);
+	extern void _assign_tlb(void *);
+	#define enable_cache() _enable_cache()
+	#define disable_cache() _disable_cache()
+	#define assign_tlb(p) _assign_tlb(p)
+#endif
 
-int main(void)
-{
-	uart_init();
-	udc_init(&udc_driver);
-	puts("ready");
+extern void init_tlb(void *);
 
-	while(1) {
-		udc_task();
-	}
-}
+#endif /* _CACHE_H */
