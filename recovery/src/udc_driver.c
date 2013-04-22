@@ -23,10 +23,12 @@
 
 #include "udc.h"
 #include "descriptors.h"
+#include "cache.h"
 
 static struct udc_req setup_req = {0};
 static struct udc_req buffer_req = {0};
-static struct udc_ep *data_ep;
+
+static int process_req_vendor(struct udc *udc,	struct usb_ctrlrequest *ctrl);
 
 static inline int process_req_desc(struct udc *udc,
 		struct usb_ctrlrequest *ctrl)
@@ -103,17 +105,17 @@ static inline int process_req_desc(struct udc *udc,
 
 static inline void set_config(struct udc *udc, int config)
 {
-	struct usb_endpoint_descriptor *data_ep_descriptor;
+	struct udc_ep *ep1 = &udc->ep[1];
+	struct usb_endpoint_descriptor *ep1_descriptor;
 
-	if (udc->speed == USB_SPEED_HIGH) {
-		data_ep_descriptor = &hs_config_descriptor.ep1;
-	} else {
-		data_ep_descriptor = &fs_config_descriptor.ep1;
-	}
+	if (udc->speed == USB_SPEED_HIGH)
+		ep1_descriptor = &hs_config_descriptor.ep1;
+	else
+		ep1_descriptor = &fs_config_descriptor.ep1;
 
-	data_ep->ops->disable(data_ep);
+	ep1->ops->disable(ep1);
 	if (config)
-		data_ep->ops->enable(data_ep, data_ep_descriptor);
+		ep1->ops->enable(ep1, ep1_descriptor);
 	udc->config = config;
 }
 
@@ -161,6 +163,9 @@ static inline int process_req_iface(struct udc *udc,
 
 static int process_setup(struct udc *udc, struct usb_ctrlrequest *ctrl)
 {
+	if ((ctrl->bRequestType & USB_TYPE_MASK) == USB_TYPE_VENDOR)
+		return process_req_vendor(udc, ctrl);
+
 	if ((ctrl->bRequestType & USB_TYPE_MASK) != USB_TYPE_STANDARD)
 		return -1;
 
@@ -185,22 +190,86 @@ static int process_setup(struct udc *udc, struct usb_ctrlrequest *ctrl)
 	return -1;
 }
 
-static void buffer_req_complete(struct udc_ep *ep, struct udc_req *req)
-{
-	if (req->status)
-		return;
-}
-
-static void init(struct udc *udc)
-{
-	data_ep = &udc->ep[1];
-
-	buffer_req.complete = buffer_req_complete;
-	INIT_LIST_HEAD(&buffer_req.queue);
-}
-
 struct udc_driver udc_driver = {
 	.setup = process_setup,
-	.init = init,
 };
 
+/**************************************************************************/
+/* Application specific code                                              */
+/**************************************************************************/
+
+static u16 cmd;
+static u8 buf[8];
+
+enum commands {
+	COMMAND_LOAD = 0,
+	COMMAND_RUN,
+};
+
+struct load_data {
+	void *addr;
+	u32 length;
+};
+
+struct run_data {
+	void (*f)(void);
+};
+
+static void command_data(struct udc_ep *ep, struct udc_req *req)
+{
+	struct udc *udc = ep->dev;
+	struct udc_ep *ep1 = &udc->ep[1];
+
+	switch (cmd) {
+	case COMMAND_LOAD:
+		if (req->actual != sizeof(struct load_data))
+			return;
+
+		struct load_data *load = req->buf;
+
+		bzero(&buffer_req, sizeof(buffer_req));
+		INIT_LIST_HEAD(&buffer_req.queue);
+		buffer_req.buf = load->addr;
+		buffer_req.length = load->length;
+		ep1->ops->queue(ep1, &buffer_req);
+		break;
+
+	case COMMAND_RUN:
+		if (req->actual != sizeof(struct run_data))
+			return;
+
+		struct run_data *run = req->buf;
+		disable_cache();
+		run->f();
+		break;
+	}
+}
+
+static int command_handler(struct udc *udc, struct usb_ctrlrequest *ctrl)
+{
+	struct udc_ep *ep0 = &udc->ep[0];
+	cmd = ctrl->wValue;
+	
+	if (!(ctrl->bRequestType & USB_DIR_IN)) {
+		bzero(&setup_req, sizeof(setup_req));
+		INIT_LIST_HEAD(&setup_req.queue);
+		setup_req.buf = buf;
+		setup_req.length = min((u32)ctrl->wLength, sizeof(buf));
+		setup_req.complete = command_data;
+		switch (cmd) {
+		case COMMAND_LOAD:
+		case COMMAND_RUN:
+			ep0->ops->queue(ep0, &setup_req);
+			return 0;
+		}
+	}
+	return -1;
+}
+
+static int process_req_vendor(struct udc *udc, struct usb_ctrlrequest *ctrl)
+{
+	if (ctrl->bRequest == 0x40)
+		return command_handler(udc, ctrl);
+
+	return -1;
+}
