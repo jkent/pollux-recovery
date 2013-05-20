@@ -24,6 +24,7 @@
 #define PRODUCT_STRING u"POLLUX recovery"
 
 /* High speed descriptors */
+__attribute__((aligned(2)))
 const struct usb_device_descriptor hs_device_descriptor = {
 	.bLength            = USB_DT_DEVICE_SIZE,
 	.bDescriptorType    = USB_DT_DEVICE,
@@ -36,6 +37,7 @@ const struct usb_device_descriptor hs_device_descriptor = {
 	.bNumConfigurations = NUM_CONFIG_DESC,
 };
 
+__attribute__((aligned(2)))
 const struct usb_qualifier_descriptor hs_qualifier_descriptor = {
 	.bLength            = USB_DT_DEVICE_QUALIFIER_SIZE,
 	.bDescriptorType    = USB_DT_DEVICE_QUALIFIER,
@@ -44,6 +46,7 @@ const struct usb_qualifier_descriptor hs_qualifier_descriptor = {
 	.bNumConfigurations = 1,
 };
 
+__attribute__((aligned(2)))
 struct usb_device_config_descriptor hs_config_descriptor = {
 	.cfg = {
 		.bLength             = USB_DT_CONFIG_SIZE,
@@ -72,6 +75,7 @@ struct usb_device_config_descriptor hs_config_descriptor = {
 };
 
 /* Full speed descriptors */
+__attribute__((aligned(2)))
 const struct usb_device_descriptor fs_device_descriptor = {
 	.bLength            = USB_DT_DEVICE_SIZE,
 	.bDescriptorType    = USB_DT_DEVICE,
@@ -84,6 +88,7 @@ const struct usb_device_descriptor fs_device_descriptor = {
 	.bNumConfigurations = NUM_CONFIG_DESC,
 };
 
+__attribute__((aligned(2)))
 const struct usb_qualifier_descriptor fs_qualifier_descriptor = {
 	.bLength            = USB_DT_DEVICE_QUALIFIER_SIZE,
 	.bDescriptorType    = USB_DT_DEVICE_QUALIFIER,
@@ -92,6 +97,7 @@ const struct usb_qualifier_descriptor fs_qualifier_descriptor = {
 	.bNumConfigurations = 1,
 };
 
+__attribute__((aligned(2)))
 struct usb_device_config_descriptor fs_config_descriptor = {
 	.cfg = {
 		.bLength             = USB_DT_CONFIG_SIZE,
@@ -119,18 +125,21 @@ struct usb_device_config_descriptor fs_config_descriptor = {
 };
 
 /* String descriptors */
+__attribute__((aligned(2)))
 static const struct usb_string_descriptor str0_descriptor = {
 	.bLength         = 2 + 1*2,
 	.bDescriptorType = USB_DT_STRING,
 	.wData           = { 0x0409 },
 };
 
+__attribute__((aligned(2)))
 static const struct usb_string_descriptor str1_descriptor = {
 	.bLength         = 2 + (sizeof(MANUFACTURER_STRING) - 2),
 	.bDescriptorType = USB_DT_STRING,
 	.wData           = { MANUFACTURER_STRING },
 };
 
+__attribute__((aligned(2)))
 static const struct usb_string_descriptor str2_descriptor = {
 	.bLength         = 2 + (sizeof(PRODUCT_STRING) - 2),
 	.bDescriptorType = USB_DT_STRING,

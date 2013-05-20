@@ -15,16 +15,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
+#include <stdio.h>
 
-#if defined(CONFIG_START_FROM_NAND)
-void nand_startup(void *load_addr)
-{
-}
-#endif
+#include "udc.h"
+#include "udc_driver.h"
 
-#if defined(CONFIG_START_FROM_UART)
-void uart_startup(void *load_addr)
+int main(void)
 {
+	udc_init(&udc_driver);
+	puts("ready");
+
+	while(1) {
+		udc_task();
+	}
 }
-#endif

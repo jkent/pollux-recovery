@@ -19,11 +19,11 @@
 #include <string.h>
 
 #include "asm/io.h"
+#include "baremetal/cache.h"
 #include "baremetal/util.h"
 
 #include "udc.h"
 #include "descriptors.h"
-#include "cache.h"
 
 static struct udc_req setup_req = {0};
 static struct udc_req buffer_req = {0};

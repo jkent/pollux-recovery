@@ -7,7 +7,7 @@ import struct
 import time
 
 root_dir = os.path.abspath(os.path.dirname(__file__))
-pyusb_dir = os.path.join(root_dir, '..', 'pyusb')
+pyusb_dir = os.path.join(root_dir, 'pyusb')
 sys.path.insert(1, pyusb_dir)
 if sys.platform == 'win32':
 	import platform
