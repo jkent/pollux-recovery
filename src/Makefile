@@ -1,3 +1,4 @@
+obj-y += bch.o
 obj-y += descriptors.o
 obj-y += recovery.o
 obj-y += udc.o
