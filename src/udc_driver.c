@@ -15,6 +15,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -27,6 +28,8 @@
 
 static struct udc_req setup_req = {0};
 static struct udc_req buffer_req = {0};
+
+extern bool timeout_aborted;
 
 static int process_req_vendor(struct udc *udc,	struct usb_ctrlrequest *ctrl);
 
@@ -249,18 +252,29 @@ static int command_handler(struct udc *udc, struct usb_ctrlrequest *ctrl)
 {
 	struct udc_ep *ep0 = &udc->ep[0];
 	cmd = ctrl->wValue;
-	
+
+	if (!timeout_aborted) {
+		timeout_aborted = true;
+		puts("Command received, timeout aborted");
+	}
+
 	if (!(ctrl->bRequestType & USB_DIR_IN)) {
-		bzero(&setup_req, sizeof(setup_req));
-		INIT_LIST_HEAD(&setup_req.queue);
-		setup_req.buf = buf;
-		setup_req.length = min((u32)ctrl->wLength, sizeof(buf));
-		setup_req.complete = command_data;
-		switch (cmd) {
-		case COMMAND_LOAD:
-		case COMMAND_RUN:
-			ep0->ops->queue(ep0, &setup_req);
-			return 0;
+		if (ctrl->wLength > 0) {
+			bzero(&setup_req, sizeof(setup_req));
+			INIT_LIST_HEAD(&setup_req.queue);
+			setup_req.buf = buf;
+			setup_req.length = min((u32)ctrl->wLength, sizeof(buf));
+			setup_req.complete = command_data;
+			switch (cmd) {
+			case COMMAND_LOAD:
+			case COMMAND_RUN:
+				ep0->ops->queue(ep0, &setup_req);
+				return 0;
+			}
+
+		}
+		else {
+			/* nothing */
 		}
 	}
 	return -1;
